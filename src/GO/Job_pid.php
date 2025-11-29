@@ -4,7 +4,7 @@ use DateTime;
 use Exception;
 use InvalidArgumentException;
 
-class Job_new
+class Job_pid
 {
     use Traits\Interval,
         Traits\Mailer;

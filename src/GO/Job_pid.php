@@ -1,5 +1,5 @@
 <?php namespace GO;
-
+//Does not Support windows, this is linux only
 use DateTime;
 use Exception;
 use InvalidArgumentException;
@@ -227,8 +227,6 @@ class Job_pid
         return $this->pidFile &&
                file_exists($this->pidFile) &&
                $this->checkPID() === true;
-        //var_dump($this->checkPID());
-        //return true;
     }
 
      /**

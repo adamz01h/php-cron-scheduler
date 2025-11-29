@@ -1,5 +1,6 @@
 <?php namespace GO;
 
+//Should work in linux and windows systems
 use DateTime;
 use Exception;
 use InvalidArgumentException;

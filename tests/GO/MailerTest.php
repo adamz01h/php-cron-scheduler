@@ -1,7 +1,11 @@
-<?php namespace GO\Job\Tests;
+<?php
+namespace GO\Job\Tests;
 
 use GO\Job;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mailer\Transport;
 
 class MailerTest extends TestCase
 {
@@ -13,29 +17,29 @@ class MailerTest extends TestCase
         $this->assertTrue(isset($config['subject']));
         $this->assertTrue(isset($config['from']));
         $this->assertTrue(isset($config['body']));
-        $this->assertTrue(isset($config['transport']));
+        $this->assertInstanceOf(MailerInterface::class, $config['transport']);
     }
 
     public function testShouldAllowCustomTransportWhenSendingEmails()
     {
         $job = new Job(function () {
-            return 'hi';
-        });
+            return 'hi'; });
+
+        $nullTransport = new Mailer(Transport::fromDsn('null://null'));
 
         $job->configure([
             'email' => [
-                'transport' => new \Swift_NullTransport(),
+                'transport' => $nullTransport,
             ],
         ]);
 
-        $this->assertInstanceOf(\Swift_NullTransport::class, $job->getEmailConfig()['transport']);
+        $this->assertInstanceOf(MailerInterface::class, $job->getEmailConfig()['transport']);
     }
 
-    public function testEmailTransportShouldAlwaysBeInstanceOfSwift_Transport()
+    public function testEmailTransportShouldAlwaysBeInstanceOfMailerInterface()
     {
         $job = new Job(function () {
-            return 'hi';
-        });
+            return 'hi'; });
 
         $job->configure([
             'email' => [
@@ -43,34 +47,44 @@ class MailerTest extends TestCase
             ],
         ]);
 
-        $this->assertInstanceOf(\Swift_Transport::class, $job->getEmailConfig()['transport']);
+        $this->assertInstanceOf(
+            MailerInterface::class,
+            $job->getEmailConfig()['transport']
+        );
     }
 
     public function testShouldSendJobOutputToEmail()
     {
         $emailAddress = 'local@localhost.com';
         $command = PHP_BINARY . ' ' . __DIR__ . '/../test_job.php';
-        $job1 = new Job($command);
 
-        $job2 = new Job(function () {
-            return 'Hello World!';
-        });
+        $job1 = new Job($command);
+        $job2 = new Job(fn() => 'Hello World!');
 
         $nullTransportConfig = [
             'email' => [
-                'transport' => new \Swift_NullTransport(),
+                'transport' => new Mailer(Transport::fromDsn('null://null')),
             ],
         ];
+
         $job1->configure($nullTransportConfig);
         $job2->configure($nullTransportConfig);
 
         $outputFile1 = __DIR__ . '/../tmp/output001.log';
         $this->assertTrue($job1->output($outputFile1)->email($emailAddress)->run());
+
         $outputFile2 = __DIR__ . '/../tmp/output002.log';
         $this->assertTrue($job2->output($outputFile2)->email($emailAddress)->run());
 
-        unlink($outputFile1);
-        unlink($outputFile2);
+        // Only unlink if file exists
+        if (file_exists($outputFile1)) {
+            unlink($outputFile1);
+        }
+
+        // Only unlink if file exists
+        if (file_exists($outputFile2)) {
+            unlink($outputFile2);
+        }
     }
 
     public function testShouldSendMultipleFilesToEmail()
@@ -84,23 +98,31 @@ class MailerTest extends TestCase
 
         $nullTransportConfig = [
             'email' => [
-                'transport' => new \Swift_NullTransport(),
+                'transport' => new Mailer(Transport::fromDsn('null://null')),
             ],
         ];
+
         $job->configure($nullTransportConfig);
 
-        $this->assertTrue($job->output([
-            $outputFile1, $outputFile2,
-        ])->email([$emailAddress])->run());
+        $this->assertTrue(
+            $job->output([$outputFile1, $outputFile2])
+                ->email([$emailAddress])
+                ->run()
+        );
 
-        unlink($outputFile1);
-        unlink($outputFile2);
+        // Only unlink if file exists
+        if (file_exists($outputFile1)) {
+            unlink($outputFile1);
+        }
+
+        // Only unlink if file exists
+        if (file_exists($outputFile2)) {
+            unlink($outputFile2);
+        }
     }
 
     public function testShouldSendToMultipleEmails()
     {
-        $emailAddress1 = 'local@localhost.com';
-        $emailAddress2 = 'local1@localhost.com';
         $command = PHP_BINARY . ' ' . __DIR__ . '/../async_job.php';
         $job = new Job($command);
 
@@ -108,51 +130,60 @@ class MailerTest extends TestCase
 
         $nullTransportConfig = [
             'email' => [
-                'transport' => new \Swift_NullTransport(),
+                'transport' => new Mailer(Transport::fromDsn('null://null')),
             ],
         ];
+
         $job->configure($nullTransportConfig);
 
-        $this->assertTrue($job->output($outputFile)->email([
-            $emailAddress1, $emailAddress2,
-        ])->run());
+        $this->assertTrue(
+            $job->output($outputFile)
+                ->email(['local@localhost.com', 'local1@localhost.com'])
+                ->run()
+        );
 
-        unlink($outputFile);
+        // Only unlink if file exists
+        if (file_exists($outputFile)) {
+            unlink($outputFile);
+        }
     }
 
     public function testShouldAcceptCustomEmailConfig()
     {
-        $emailAddress = 'local@localhost.com';
         $command = PHP_BINARY . ' ' . __DIR__ . '/../async_job.php';
         $job = new Job($command);
 
         $outputFile = __DIR__ . '/../tmp/output6.log';
 
+        $nullTransport = new Mailer(Transport::fromDsn('null://null'));
+
         $this->assertTrue(
-            $job->output($outputFile)->email($emailAddress)
+            $job->output($outputFile)
+                ->email('local@localhost.com')
                 ->configure([
                     'email' => [
                         'subject' => 'My custom subject',
                         'from' => 'my@custom.from',
                         'body' => 'My custom body',
-                        'transport' => new \Swift_NullTransport(),
+                        'transport' => $nullTransport,
                     ],
                 ])->run()
         );
 
-        unlink($outputFile);
+        // Only unlink if file exists
+        if (file_exists($outputFile)) {
+            unlink($outputFile);
+        }
     }
 
     public function testShouldIgnoreEmailIfSpecifiedInConfig()
     {
         $job = new Job(function () {
-            $tot = 1 + 2;
-            // Return nothing....
-        });
+            $x = 1 + 2; });
 
         $nullTransportConfig = [
             'email' => [
-                'transport' => new \Swift_NullTransport(),
+                'transport' => new Mailer(Transport::fromDsn('null://null')),
                 'ignore_empty_output' => true,
             ],
         ];
@@ -161,6 +192,9 @@ class MailerTest extends TestCase
         $outputFile = __DIR__ . '/../tmp/output.log';
         $this->assertTrue($job->output($outputFile)->email('local@localhost.com')->run());
 
-        @unlink($outputFile);
+        // Only unlink if file exists
+        if (file_exists($outputFile)) {
+            unlink($outputFile);
+        }
     }
 }

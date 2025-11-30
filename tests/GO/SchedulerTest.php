@@ -67,6 +67,7 @@ class SchedulerTest extends TestCase
      */
     public function testShouldThrowExceptionIfScriptIsNotAString()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $scheduler = new Scheduler();
         $scheduler->php(function () {
             return false;
@@ -234,9 +235,10 @@ class SchedulerTest extends TestCase
 
         $scheduler->run();
 
-        $this->assertRegexp('/ Executing Closure$/', $scheduler->getVerboseOutput());
-        $this->assertRegexp('/ Executing Closure$/', $scheduler->getVerboseOutput('text'));
+        $this->assertMatchesRegularExpression('/ Executing Closure$/', $scheduler->getVerboseOutput());
+        $this->assertMatchesRegularExpression('/ Executing Closure$/', $scheduler->getVerboseOutput('text'));
     }
+
 
     public function testShouldShowClosuresVerboseOutputAsHtml()
     {
@@ -253,8 +255,7 @@ class SchedulerTest extends TestCase
         });
 
         $scheduler->run();
-
-        $this->assertRegexp('/<br>/', $scheduler->getVerboseOutput('html'));
+        $this->assertMatchesRegularExpression('/<br>/', $scheduler->getVerboseOutput('html'));
     }
 
     public function testShouldShowClosuresVerboseOutputAsArray()
@@ -282,6 +283,9 @@ class SchedulerTest extends TestCase
      */
     public function testShouldThrowExceptionWithInvalidOutputType()
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid output type');
+
         $scheduler = new Scheduler();
 
         $scheduler->call(function ($phrase) {

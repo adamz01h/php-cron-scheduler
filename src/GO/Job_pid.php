@@ -1,10 +1,10 @@
 <?php namespace GO;
-
+//Does not Support windows, this is linux only
 use DateTime;
 use Exception;
 use InvalidArgumentException;
 
-class Job
+class Job_pid
 {
     use Traits\Interval,
         Traits\Mailer;
@@ -150,6 +150,8 @@ class Job
      * @param  array            $args
      * @param  string           $id
      */
+    private ?int $pid = null;
+    private ?string $pidFile = null;
     public function __construct($command, $args = [], $id = null)
     {
         if (is_string($id)) {
@@ -199,7 +201,7 @@ class Job
      * @param  DateTime  $date
      * @return bool
      */
-    public function isDue(DateTime $date = null)
+    public function isDue(?DateTime $date = null)
     {
         // The execution time is being defaulted if not defined
         if (! $this->executionTime) {
@@ -225,8 +227,6 @@ class Job
         return $this->pidFile &&
                file_exists($this->pidFile) &&
                $this->checkPID() === true;
-        //var_dump($this->checkPID());
-        //return true;
     }
 
      /**
@@ -287,7 +287,7 @@ class Job
      * @param  callable  $whenOverlapping  A callback to ignore job overlapping
      * @return self
      */
-    public function onlyOne($tempDir = null, callable $whenOverlapping = null)
+    public function onlyOne($tempDir = null, ?callable $whenOverlapping = null)
     {
         if ($tempDir === null || ! is_dir($tempDir)) {
             $tempDir = $this->tempDir;

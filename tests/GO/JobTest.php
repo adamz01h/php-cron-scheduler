@@ -146,8 +146,9 @@ class JobTest extends TestCase
      */
     public function testShouldFailIfEmailInputIsNotStringOrArray()
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('string or array');
         $job = new Job('ls');
-
         $job->email(1);
     }
 
@@ -164,6 +165,7 @@ class JobTest extends TestCase
      */
     public function testShouldFailIfEmailConfigurationIsNotArray()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $job = new Job('ls');
         $job->configure([
             'email' => 123,

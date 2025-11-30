@@ -37,6 +37,7 @@ class IntervalTest extends TestCase
      */
     public function testShouldThrowExceptionWithInvalidHourlyMinuteInput()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $job = new Job('ls');
         $job->hourly('abc');
     }
@@ -68,6 +69,7 @@ class IntervalTest extends TestCase
      */
     public function testShouldThrowExceptionWithInvalidDailyHourInput()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $job = new Job('ls');
         $job->daily('abc');
     }
@@ -77,6 +79,7 @@ class IntervalTest extends TestCase
      */
     public function testShouldThrowExceptionWithInvalidDailyMinuteInput()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $job = new Job('ls');
         $job->daily(2, 'abc');
     }

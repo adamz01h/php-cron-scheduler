@@ -176,7 +176,7 @@ class Scheduler
                 try {
                     $job->run();
                     $this->pushExecutedJob($job);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $this->pushFailedJob($job, $e);
                 }
             }

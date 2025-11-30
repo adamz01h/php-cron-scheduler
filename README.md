@@ -1,29 +1,9 @@
 PHP Cron Scheduler
 ==
-
-[![Latest Stable Version](https://poser.pugx.org/peppeocchi/php-cron-scheduler/v/stable)](https://packagist.org/packages/peppeocchi/php-cron-scheduler) [![License](https://poser.pugx.org/peppeocchi/php-cron-scheduler/license)](https://packagist.org/packages/peppeocchi/php-cron-scheduler) [![Build Status](https://travis-ci.org/peppeocchi/php-cron-scheduler.svg)](https://travis-ci.org/peppeocchi/php-cron-scheduler) [![Coverage Status](https://coveralls.io/repos/github/peppeocchi/php-cron-scheduler/badge.svg?branch=v2.x)](https://coveralls.io/github/peppeocchi/php-cron-scheduler?branch=v2.x) [![StyleCI](https://styleci.io/repos/38302733/shield)](https://styleci.io/repos/38302733) [![Total Downloads](https://poser.pugx.org/peppeocchi/php-cron-scheduler/downloads)](https://packagist.org/packages/peppeocchi/php-cron-scheduler)
-
 This is a framework agnostic cron jobs scheduler that can be easily integrated with your project or run as a standalone command scheduler.
-The idea was originally inspired by the [Laravel Task Scheduling](http://laravel.com/docs/5.1/scheduling).
+Split from peppeocchi/php-cron-scheduler
 
-## Installing via Composer
-The recommended way is to install the php-cron-scheduler is through [Composer](https://getcomposer.org/).
-Please refer to [Getting Started](https://getcomposer.org/doc/00-intro.md) on how to download and install Composer.
-
-After you have downloaded/installed Composer, run
-
-`php composer.phar require peppeocchi/php-cron-scheduler`
-
-or add the package to your `composer.json`
-```json
-{
-    "require": {
-        "peppeocchi/php-cron-scheduler": "3.*"
-    }
-}
-```
-
-Scheduler V3 requires php >= 7.1, please use the [v2 branch](https://github.com/peppeocchi/php-cron-scheduler/tree/v2.x) for php versions < 7.1.
+Scheduler requires php >= 7.4
 
 ## How it works
 
@@ -245,12 +225,12 @@ $scheduler->call(function () {
 })->output('my_file.log');
 ```
 
-### Send output to email/s
+### Send output to email/s (UNTESTED)
 
 You can define one or multiple email addresses where you want the output of your script/command/function execution to be sent to.
 In order for the email to be sent, the output of the job needs to be sent first to a file.
 In fact, the files will be attached to your email address.
-In order for this to work, you need to install [swiftmailer/swiftmailer](https://github.com/swiftmailer/swiftmailer)
+In order for this to work, you need to install [symfony/mailer](https://symfony.com/doc/current/mailer.html)
 
 ```php
 $scheduler->php('script.php')->output([
@@ -262,47 +242,6 @@ $scheduler->php('script.php')->output([
 ]);
 ```
 
-You can optionally customize the `Swift_Mailer` instance with a custom `Swift_Transport`.
-You can configure:
-- `subject` - The subject of the email sent
-- `from` - The email address set as sender
-- `body` - The body of the email
-- `transport` - The transport to use. For example if you want to use your gmail account or any other SMTP account. The value should be an instance of `Swift_Tranport`
-- `ignore_empty_output` - If this is set to `true`, jobs that return no output won't fire any email.
-
-The configuration can be set "globally" for all the scheduler commands, when creating the scheduler.
-
-```php
-$scheduler = new Scheduler([
-    'email' => [
-        'subject' => 'Visitors count',
-        'from' => 'cron@email.com',
-        'body' => 'This is the daily visitors count',
-        'transport' => Swift_SmtpTransport::newInstance('smtp.gmail.com', 465, 'ssl')
-            ->setUsername('username')
-            ->setPassword('password'),
-        'ignore_empty_output' => false,
-    ]
-]);
-```
-
-Or can be set on a job per job basis.
-
-```php
-$scheduler = new Scheduler();
-
-$scheduler->php('myscript.php')->configure([
-    'email' => [
-        'subject' => 'Visitors count',
-    ]
-]);
-
-$scheduler->php('my_other_script.php')->configure([
-    'email' => [
-        'subject' => 'Page views count',
-    ]
-]);
-```
 
 ### Schedule conditional execution
 
